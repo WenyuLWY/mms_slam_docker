@@ -236,15 +236,16 @@ void image2pc(){
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr bounding_box_pc(new pcl::PointCloud<pcl::PointXYZRGB>());
             //fuse color image and depth image
 
-            Eigen::Isometry3d pose_trans = Eigen::Isometry3d::Identity();
-            pose_trans.translation() = Eigen::Vector3d(0.001, 0.014, -0.007);
-            Eigen::Quaterniond quaternion_temp(1.00,-0.012, -0.001, -0.003); 
-            pose_trans.linear() = quaternion_temp.toRotationMatrix();;
+            // Eigen::Isometry3d pose_trans = Eigen::Isometry3d::Identity();
+            // pose_trans.translation() = Eigen::Vector3d(0.001, 0.014, -0.007);
+            // Eigen::Quaterniond quaternion_temp(1.00,-0.012, -0.001, -0.003); 
+            // pose_trans.linear() = quaternion_temp.toRotationMatrix();;
+            // pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_pc(new pcl::PointCloud<pcl::PointXYZRGB>());
+            // pcl::transformPointCloud(*pointcloud_in, *transformed_pc, pose_trans.cast<float>());
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_pc(new pcl::PointCloud<pcl::PointXYZRGB>());
-            pcl::transformPointCloud(*pointcloud_in, *transformed_pc, pose_trans.cast<float>());
+            *transformed_pc = *pointcloud_in; // 复制 pointcloud_in 的数据到 transformed_pc
+
             //image dilation
-            
-            
             //0: Rect - 1: Cross - 2: Ellipse
             int morph_elem = 1;
             //max 21
@@ -253,16 +254,20 @@ void image2pc(){
             cv::Mat dilated_image;
 
             //ROS_INFO("dimension %d * %d",color_image_ptr->image.cols,color_image_ptr->image.rows);
-            if(color_image_ptr->image.cols!=1280 || color_image_ptr->image.rows!=720){
+            if(color_image_ptr->image.cols!=640 || color_image_ptr->image.rows!=480){
                 ROS_WARN("input mask dimension error,%d,%d",color_image_ptr->image.rows,color_image_ptr->image.cols);
                 continue;
             }
             cv::dilate(color_image_ptr->image, dilated_image, element,cv::Point(-1,-1), 2, cv::BORDER_REPLICATE);
             // count_temp=0;
-            for(int i=0;i<1280;i++){
-                for(int j=0;j<720;j++){
+            for(int i=0;i<640;i++){
+                for(int j=0;j<480;j++){
+                    // ROS_INFO("dilated_image  Value at (%d, %d) is %d", j, i,dilated_image.at<unsigned char>(j,i));
+                    // std::cout<<j<<i<<dilated_image.at<unsigned char>(j,i)<<std::endl;
                     if (dilated_image.at<unsigned char>(j,i)!=0)
+                    {
                         dilated_image.at<unsigned char>(j,i) *= 100;
+                    }
                 }
             }
             //ROS_INFO("total points dilated %d * %d",dilated_image.rows,dilated_image.cols);
@@ -280,25 +285,35 @@ void image2pc(){
             	point_temp.r = pointcloud_in->points[i].r;
             	point_temp.g = pointcloud_in->points[i].g;
             	point_temp.b = pointcloud_in->points[i].b;
-            	
-                int pixel_x = 910.0393676757812 * transformed_pc->points[i].x/transformed_pc->points[i].z + 647.5104370117188;
-                int pixel_y = 910.4710693359375 * transformed_pc->points[i].y/transformed_pc->points[i].z + 363.0339050292969;
-                //ROS_INFO("width = %d, height=%d",color_image_ptr->image.cols,color_image_ptr->image.rows);
+
+            	//点云投影到图像平面
+                float fx = 535.4;
+                float fy = 539.2;
+                float cx = 320.1;
+                float cy = 247.6;
+                int pixel_x = fx * transformed_pc->points[i].x/transformed_pc->points[i].z + 320.1;
+                int pixel_y = fy * transformed_pc->points[i].y/transformed_pc->points[i].z + 247.6;
+
+                // int pixel_x = 910.0393676757812 * transformed_pc->points[i].x/transformed_pc->points[i].z + 647.5104370117188;
+                // int pixel_y = 910.4710693359375 * transformed_pc->points[i].y/transformed_pc->points[i].z + 363.0339050292969;
+                
+                // ROS_INFO("x=%d, y=%d, width = %d, height=%d",pixel_x,pixel_y,color_image_ptr->image.cols,color_image_ptr->image.rows);
                 if(pixel_x< 0 || pixel_x>=color_image_ptr->image.cols){
-                    ROS_WARN("unaligned points");
+                    ROS_INFO("x=%d, y=%d, width = %d, height=%d",pixel_x,pixel_y,color_image_ptr->image.cols,color_image_ptr->image.rows);
                     continue;
                 }
                 if(pixel_y< 0 || pixel_y>=color_image_ptr->image.rows){
-                    ROS_WARN("unaligned points");
+                    ROS_INFO("x=%d, y=%d, width = %d, height=%d",pixel_x,pixel_y,color_image_ptr->image.cols,color_image_ptr->image.rows);
                     continue;
                 }
                 
                     // static_pc->push_back(point_temp);
                     // static_pc_id.push_back(i);
-                    
+
                 if (dilated_image.at<unsigned char>(pixel_y,pixel_x)==100)
             	{
                     //is_dynamic_final[i]=true;
+                    // ROS_INFO("Pixel Value at (%d, %d) is 100", pixel_x, pixel_y);
                     dynamic_pc->push_back(point_temp); 
                     dynamic_pc_id.push_back(i);
                 }else if (dilated_image.at<unsigned char>(pixel_y,pixel_x)!=0){

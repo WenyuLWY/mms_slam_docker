@@ -111,8 +111,8 @@ class SOLOv2Node(object):
                 continue
 
             if msg is not None:
-                np_image = self.imgmsg_to_cv2(msg)
-                # np_image = self.bgr8msg_to_cv2(msg)
+                # np_image = self.imgmsg_to_cv2(msg)
+                np_image = self.bgr8msg_to_cv2(msg)
 
                 # print(np_image.shape)
                 # Run detection
@@ -141,11 +141,11 @@ class SOLOv2Node(object):
         #print('Time needed for segmentation: %.3f s' % msg.header)
         result_msg.encoding = "mono8"
         if not result or result == [None]:
-            result_msg.height = 720
-            result_msg.width = 1280
+            result_msg.height = 480
+            result_msg.width = 640
             result_msg.step = result_msg.width
             result_msg.is_bigendian = False
-            mask_sum = np.zeros(shape=(1280,720),dtype=np.uint8)
+            mask_sum = np.zeros(shape=(640,480),dtype=np.uint8)
             result_msg.data = mask_sum.tobytes()
             return result_msg
         cur_result = result[0]
@@ -176,7 +176,9 @@ class SOLOv2Node(object):
             #     mask_sum += seg_label[i, :, :] * (class_id+1)*20 + seg_label[i, :, :] * 150
             # else:
             #     mask_sum += seg_label[i, :, :] * (class_id+1)*20 + seg_label[i, :, :] * 50
-
+            
+        # mask_sum[mask_sum == 1] = 255
+        
         result_msg.data = mask_sum.tobytes()
         return result_msg
 

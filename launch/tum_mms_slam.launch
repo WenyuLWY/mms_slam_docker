@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <node name="bag1" pkg="rosbag" type="play" args="--clock -r 0.5 $(env HOME)/download/dynamic_warehouse.bag" />
+    <node name="bag1" pkg="rosbag" type="play" args="--clock -r 0.5 $(env HOME)/download/tum/rosbag_mmsslam/rgbd_dataset_freiburg3_walking_xyz.bag" />
 
     <param name="/use_sim_time" value="true" /> 
 
@@ -15,7 +15,7 @@
  -->
 
     <!-- solo -->
-    <node pkg="mms_slam" name="solo_node" type="solo_node.py" output="screen">
+    <node pkg="mms_slam" name="solo_node" type="solo_node_tum.py" output="screen">
         <remap from="~input" to="/camera/color/image_raw" />
         <param name="~visualization" value="true" />
         <!-- skip how many frames per processing -->

@@ -9,6 +9,9 @@
 #include <queue>
 #include <thread>
 #include <chrono>
+#include <boost/filesystem.hpp>
+#include <iostream>
+#include <fstream>
 
 //ros lib
 #include <ros/ros.h>
@@ -34,6 +37,9 @@ std::queue<sensor_msgs::PointCloud2ConstPtr> pointCloudBuf;
 lidar::Lidar lidar_param;
 
 ros::Publisher pubLaserOdometry;
+
+std::string traj_path="/root/traj.txt";
+
 void velodyneSurfHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
 {
     mutex_lock.lock();
@@ -136,6 +142,21 @@ void odom_estimation(){
             laserOdometry.pose.pose.position.z = t_current.z();
             pubLaserOdometry.publish(laserOdometry);
 
+
+            std::ofstream tumFile(traj_path, std::ios::app); // 使用追加模式以添加新的位姿
+            if (!tumFile.is_open()) {
+                ROS_INFO("fail to open");
+            }
+
+            tumFile << std::fixed << std::setprecision(4);
+
+            tumFile << pointcloud_time << " ";
+            tumFile << std::fixed << std::setprecision(4) << t_current.x() << " " << t_current.y() << " " << t_current.z() << " ";
+            tumFile << std::fixed << std::setprecision(4) << q_current.x() << " " << q_current.y() << " " << q_current.z() << " " << q_current.w() << std::endl;
+
+            tumFile.close();
+
+
             static tf::TransformBroadcaster br;
             tf::Transform transform;
             transform.setOrigin( tf::Vector3(t_current.x(), t_current.y(), t_current.z()) );
@@ -161,12 +182,20 @@ int main(int argc, char **argv)
     double max_dis = 60.0;
     double min_dis = 2.0;
     double map_resolution = 0.4;
+
     nh.getParam("/scan_period", scan_period); 
     nh.getParam("/vertical_angle", vertical_angle); 
     nh.getParam("/max_dis", max_dis);
     nh.getParam("/min_dis", min_dis);
     nh.getParam("/scan_line", scan_line);
     nh.getParam("/map_resolution", map_resolution);
+    nh.getParam("/traj_path", traj_path);
+
+    std::cout << "traj_path:" << traj_path << std::endl;
+
+    if (boost::filesystem::exists(traj_path)) {
+        boost::filesystem::remove(traj_path);  
+    }
 
     lidar_param.setScanPeriod(scan_period);
     lidar_param.setVerticalAngle(vertical_angle);

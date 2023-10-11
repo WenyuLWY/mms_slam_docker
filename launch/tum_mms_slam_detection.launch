@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- solo -->
-    <node name="solo_node" pkg="mms_slam" type="solo_node.py" output="screen">
+    <node name="solo_node" pkg="mms_slam" type="solo_node_tum.py" output="screen">
         <remap from="~input" to="/camera/color/image_raw" />
         <param name="~visualization" value="true" />
         <!-- skip how many frames per processing -->
