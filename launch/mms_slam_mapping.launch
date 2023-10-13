@@ -2,8 +2,13 @@
 <launch>
 
 <!-- rosbag --> 
-    <node name="bag" pkg="rosbag" type="play" args="--clock -r 0.4 -d 5 $(env HOME)/Downloads/dynamic_warehouse.bag" />
-    <param name="/use_sim_time" value="true" />  -->
+    <param name="color_width" type="int" value="1920" />
+    <param name="color_height" type="int" value="1080" />
+
+    <!-- indoor02_sauna_normal_2022-02-21-19-05-17.bag -->
+    <node name="bag" pkg="rosbag" type="play" args="--clock -r 1 -d 5 $(env HOME)/Dataset/tiers/indoor02_sauna_normal_2022-02-21-19-05-17.bag" />
+    
+    <param name="/use_sim_time" value="true" />  
 
 <!--  
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
@@ -15,7 +20,7 @@
 
     <!-- solo -->
     <node pkg="mms_slam" name="solo_node" type="solo_node.py" output="screen">
-        <remap from="~input" to="/camera/color/image_raw" />
+        <remap from="~input" to="/cam_1/color/image_raw" />
         <param name="~visualization" value="true" />
         <!-- skip how many frames per processing -->
         <param name="~skip_frame" value="3" /> 
@@ -24,6 +29,7 @@
 
     <!-- image fusion -->
     <node pkg="mms_slam" name="mms_slam_image2pc_node" type="mms_slam_image2pc_node" output="screen">
+        <remap from="/camera/depth/color/points" to="/cam_1/depth/color/points" />
     </node> 
 
     <!-- SLAM node -->
@@ -32,12 +38,18 @@
     <param name="map_resolution" type="double" value="0.02" />
     <param name="min_dis" type="double" value="0.1" />
    
-    <node pkg="mms_slam" type="mms_slam_laser_processing_node" name="mms_slam_laser_processing_node" output="log"/>
+    <node pkg="mms_slam" type="mms_slam_laser_processing_node" name="mms_slam_laser_processing_node" output="log">
+
+    </node> 
     <node pkg="mms_slam" type="mms_slam_odom_estimation_node" name="mms_slam_odom_estimation_node" output="log"/>
     <node pkg="mms_slam" type="mms_slam_laser_mapping_node" name="mms_slam_laser_mapping_node" output="log"/>
 
     <node pkg="tf" type="static_transform_publisher" name="word2map_tf"  args="0.69 0 0.0 0 0 0 /world /map 10" />
     <node pkg="tf" type="static_transform_publisher" name="baselink2cam_tf"  args="0 0 0 0 0 0 /base_link /camera_link 10" />
+
+    <node pkg="tf" type="static_transform_publisher" name="cam2depth_tf"  args="0 0 0 -0.5 0.5 -0.5 0.5  /camera_link /camera_depth_optical_frame 10" />
+    <node pkg="tf" type="static_transform_publisher" name="dep2dep_tf"  args="0 0 0 0 0 0  /camera_depth_optical_frame /cam_1_depth_optical_frame 10" />
+     
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mms_slam)/rviz/mms_slam_mapping.rviz" />
 
     <node pkg="hector_trajectory_server" type="hector_trajectory_server" name="trajectory_server_floam_ssl" ns="mms_slam" >

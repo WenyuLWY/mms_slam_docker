@@ -158,6 +158,10 @@ void LaserMappingClass::updateCurrentPointsToMap(const pcl::PointCloud<pcl::Poin
 
 
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr down_sized_pc(new pcl::PointCloud<pcl::PointXYZRGB>());
+	if(pc_in->points.size()==0)
+    {
+        ROS_WARN("lasemappingclass 163");
+    }  
 	noise_filter.setInputCloud (pc_in);
 	noise_filter.filter (*down_sized_pc);
 	// downSizeFilter.setInputCloud(pc_in);

@@ -48,7 +48,7 @@
 std::mutex mutex_lock;
 std::queue<sensor_msgs::ImageConstPtr> colorImageBuf;
 std::queue<sensor_msgs::PointCloud2ConstPtr> pointCloudBuf;
-double map_resolution = 0.4;
+double map_resolution = 0.4,color_width,color_height;
 
 ros::Publisher pubStaticPointCloud;
 ros::Publisher pubDynamicPointCloud;
@@ -257,14 +257,16 @@ void image2pc(){
             cv::Mat dilated_image;
 
             //ROS_INFO("dimension %d * %d",color_image_ptr->image.cols,color_image_ptr->image.rows);
-            if(color_image_ptr->image.cols!=1280 || color_image_ptr->image.rows!=720){
+            if(color_image_ptr->image.cols!=color_width || color_image_ptr->image.rows!=color_height){
                 ROS_WARN("input mask dimension error,%d,%d",color_image_ptr->image.rows,color_image_ptr->image.cols);
+                ROS_WARN("width and cols,%d,%d",color_width,color_image_ptr->image.cols);
+                ROS_WARN("height and rows,%d,%d",color_image_ptr->image.rows,color_height);
                 continue;
             }
             cv::dilate(color_image_ptr->image, dilated_image, element,cv::Point(-1,-1), 2, cv::BORDER_REPLICATE);
             // count_temp=0;
-            for(int i=0;i<1280;i++){
-                for(int j=0;j<720;j++){
+            for(int i=0;i<color_width;i++){
+                for(int j=0;j<color_height;j++){
                     if (dilated_image.at<unsigned char>(j,i)!=0)
                         dilated_image.at<unsigned char>(j,i) *= 100;
                 }
@@ -601,6 +603,8 @@ int main(int argc, char **argv)
 
     nh.getParam("/map_resolution", map_resolution);
     map_resolution = 0.01;
+    nh.getParam("/color_height", color_height);
+    nh.getParam("/color_width", color_width);
     ros::Subscriber subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/camera/depth/color/points", 100, velodyneHandler);
     image_transport::Subscriber colorImageSub = it.subscribe("/solo_node/mask", 100, ColorImageHandler);
 

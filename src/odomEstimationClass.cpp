@@ -44,7 +44,7 @@ void OdomEstimationClass::updatePointsToMap(const pcl::PointCloud<pcl::PointXYZR
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr downsampledEdgeCloud(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr downsampledSurfCloud(new pcl::PointCloud<pcl::PointXYZRGB>());
     downSamplingToMap(edge_in,downsampledEdgeCloud,surf_in,downsampledSurfCloud);
-    //ROS_WARN("point nyum%d,%d",(int)downsampledEdgeCloud->points.size(), (int)downsampledSurfCloud->points.size());
+    // ROS_WARN("point nyum%d,%d",(int)downsampledEdgeCloud->points.size(), (int)downsampledSurfCloud->points.size());
     if(laserCloudCornerMap->points.size()>10 && laserCloudSurfMap->points.size()>50){
         kdtreeEdgeMap->setInputCloud(laserCloudCornerMap);
         kdtreeSurfMap->setInputCloud(laserCloudSurfMap);
@@ -93,8 +93,18 @@ void OdomEstimationClass::pointAssociateToMap(pcl::PointXYZRGB const *const pi, 
 }
 
 void OdomEstimationClass::downSamplingToMap(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& edge_pc_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& edge_pc_out, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& surf_pc_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& surf_pc_out){
+    if(edge_pc_in->points.size()==0)
+    {
+        ROS_WARN("odomestimationclass 98");
+    }
+        // ROS_INFO("ZERO odomestimationclass 98: %d",edge_pc_in->points.size());  
     downSizeFilterEdge.setInputCloud(edge_pc_in);
     downSizeFilterEdge.filter(*edge_pc_out);
+    if(surf_pc_in->points.size()==0)
+    {
+        ROS_WARN("odomestimationclass 104");
+    } 
+        // ROS_INFO("ZERO odomestimationclass 104: %d",surf_pc_in->points.size());
     downSizeFilterSurf.setInputCloud(surf_pc_in);
     downSizeFilterSurf.filter(*surf_pc_out);    
 }
@@ -238,13 +248,35 @@ void OdomEstimationClass::addPointsToMap(const pcl::PointCloud<pcl::PointXYZRGB>
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr tmpCorner(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr tmpSurf(new pcl::PointCloud<pcl::PointXYZRGB>());
+    if(laserCloudSurfMap->points.size()==0)
+    {
+        ROS_WARN("odomestimationclass 251");
+    }  
+        // ROS_WARN("ZERO odomestimationclass 251: %d",laserCloudSurfMap->points.size());  
     cropBoxFilter.setInputCloud(laserCloudSurfMap);
     cropBoxFilter.filter(*tmpSurf);
+
+    if(laserCloudCornerMap->points.size()==0)
+    {
+        ROS_WARN("odomestimationclass 258");
+    }  
+        // ROS_WARN("ZERO odomestimationclass 258: %d",laserCloudCornerMap->points.size()); 
     cropBoxFilter.setInputCloud(laserCloudCornerMap);
     cropBoxFilter.filter(*tmpCorner);
 
+    if(tmpSurf->points.size()==0)
+    {
+        ROS_WARN("odomestimationclass 265");
+    }  
+    //  ROS_WARN("ZERO odomestimationclass 265: %d",tmpSurf->points.size()); 
     downSizeFilterEdge.setInputCloud(tmpSurf);
     downSizeFilterEdge.filter(*laserCloudSurfMap);
+
+    if(tmpCorner->points.size()==0)
+    {
+        ROS_WARN("odomestimationclass 272");
+    }  
+    //  ROS_WARN("ZERO odomestimationclass 272: %d",tmpCorner->points.size()); 
     downSizeFilterSurf.setInputCloud(tmpCorner);
     downSizeFilterSurf.filter(*laserCloudCornerMap);
 

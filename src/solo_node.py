@@ -17,7 +17,7 @@ ROOT_PATH = os.path.join(os.environ['HOME'], 'catkin_ws/src/mms_slam/')
 MODEL_PATH = 'config/trained_model.pth'
 CONFIG_PATH = 'config/training_param.py'
 ROS_HOME = os.environ.get('ROS_HOME', os.path.join(os.environ['HOME'], ROOT_PATH))
-RGB_TOPIC = '/camera/color/image_raw'
+RGB_TOPIC = '/cam_1/color/image_raw'
 # COCO Class names
 # Index of the class in the list is its ID. For example, to get ID of
 # the teddy bear class, use: CLASS_NAMES.index('teddy bear')
@@ -29,6 +29,7 @@ class SOLOv2Node(object):
         self.skip_frame = rospy.get_param('~skip_frame', 0)
         self.counter = self.skip_frame
         rospy.loginfo('skip %d frame' % self.skip_frame)
+        
         # Get root path and model path
         root_path = rospy.get_param('~root_path', ROOT_PATH)
         model_path = rospy.get_param('~model_path', MODEL_PATH)
@@ -43,6 +44,10 @@ class SOLOv2Node(object):
         self._visualization = rospy.get_param('~visualization', True)
 
         self._score_thr = 0.30
+
+        self.color_width=rospy.get_param('color_width')
+
+        self.color_height=rospy.get_param('color_height')
 
         # Create model object in inference mode.
         self._model = init_detector(config_file, checkpoint_file, device='cuda:0')
@@ -126,11 +131,11 @@ class SOLOv2Node(object):
         #print('Time needed for segmentation: %.3f s' % msg.header)
         result_msg.encoding = "mono8"
         if not result or result == [None]:
-            result_msg.height = 720
-            result_msg.width = 1280
+            result_msg.height = self.color_height
+            result_msg.width = self.color_width
             result_msg.step = result_msg.width
             result_msg.is_bigendian = False
-            mask_sum = np.zeros(shape=(1280,720),dtype=np.uint8)
+            mask_sum = np.zeros(shape=(self.color_width,self.color_height),dtype=np.uint8)
             result_msg.data = mask_sum.tobytes()
             return result_msg
         cur_result = result[0]

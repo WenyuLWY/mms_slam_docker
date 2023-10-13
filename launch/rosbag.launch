@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- indoor02_sauna_normal_2022-02-21-19-05-17.bag -->
+    <node name="bag" pkg="rosbag" type="play" args="--clock -l $(env HOME)/Dataset/tiers/indoor03_sauna_hard_2022-02-21-19-07-42.bag" />
+    
+    <param name="/use_sim_time" value="true" />  
+
+    <node pkg="tf" type="static_transform_publisher" name="word2map_tf"  args="0.69 0 0.0 0 0 0 /world /map 10" />
+    <node pkg="tf" type="static_transform_publisher" name="baselink2cam_tf"  args="0 0 0 0 0 0 /base_link /camera_link 10" />
+
+    <node pkg="tf" type="static_transform_publisher" name="cam2depth_tf"  args="0 0 0 -0.5 0.5 -0.5 0.5  /camera_link /camera_depth_optical_frame 10" />
+    <node pkg="tf" type="static_transform_publisher" name="dep2dep_tf"  args="0 0 0 0 0 0  /camera_depth_optical_frame /cam_1_depth_optical_frame 10" />
+     
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mms_slam)/rviz/rosbag.rviz" />
+
+</launch>

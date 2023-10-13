@@ -1,15 +1,18 @@
 <?xml version="1.0"?>
 <launch>
+    <param name="color_width" type="int" value="1920" />
+    <param name="color_height" type="int" value="1080" />
+
     <!-- solo -->
     <node name="solo_node" pkg="mms_slam" type="solo_node.py" output="screen">
-        <remap from="~input" to="/camera/color/image_raw" />
+        <remap from="~input" to="/cam_1/color/image_raw" />
         <param name="~visualization" value="true" />
         <!-- skip how many frames per processing -->
         <param name="~skip_frame" value="0" /> 
         <param name="~root_path" value="$(find mms_slam)/" /> 
     </node> 
 
-    <node name="bag" pkg="rosbag" type="play" args="-l $(env HOME)/Downloads/dynamic_warehouse.bag" />
+    <node name="bag" pkg="rosbag" type="play" args="--clock  -r 0.4 -d 1 $(env HOME)/Dataset/tiers/indoor02_sauna_normal_2022-02-21-19-05-17.bag" />
 <!-- rosbag  
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
         <arg name="color_width" value="1280" />

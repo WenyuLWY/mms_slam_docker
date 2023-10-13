@@ -101,6 +101,11 @@ void LaserProcessingClass::featureExtraction(const pcl::PointCloud<pcl::PointXYZ
             inliers->indices.push_back(i);
     }
     pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+    if(pc_out_edge->points.size()==0)
+    {
+        ROS_WARN("ZERO laserprocessingclass 106");
+    }  
+    // ROS_INFO("ZERO laserprocessingclass 106: %d",pc_out_edge->points.size());
     extract.setInputCloud(pc_out_edge);
     extract.setIndices(inliers);
     extract.setNegative(true);
